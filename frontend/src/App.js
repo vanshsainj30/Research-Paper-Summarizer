@@ -64,7 +64,17 @@ function App() {
     setSummary(null);
 
     try {
-      const response = await fetch(`${API_URL}/summarize`, {
+      const fetchWithTimeout = async (url, options, timeout = 60000) => {
+        const controller = new AbortController();
+        const id = setTimeout(() => controller.abort(), timeout);
+        try {
+          return await fetch(url, { ...options, signal: controller.signal });
+        } finally {
+          clearTimeout(id);
+        }
+      };
+
+      const response = await fetchWithTimeout(`${API_URL}/summarize`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -74,7 +84,7 @@ function App() {
           max_length: summaryLength,
           min_length: Math.floor(summaryLength * 0.4),
         }),
-      });
+      }, 600000);
 
       if (!response.ok) {
         const errorData = await response.json();
@@ -132,7 +142,7 @@ function App() {
             </div>
             <div className="hidden md:flex items-center space-x-2 text-sm text-gray-600">
               <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full font-medium">
-                google/pegasus-arxiv
+                Summarization Model
               </span>
             </div>
           </div>
@@ -310,7 +320,7 @@ function App() {
       <footer className="bg-white border-t border-gray-200 mt-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <p className="text-center text-sm text-gray-600">
-            B.Tech Final Year Project | Powered by HuggingFace Transformers & FastAPI
+            Built with FastAPI & Transformers
           </p>
         </div>
       </footer>
